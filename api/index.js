@@ -219,9 +219,91 @@ module.exports = async (req, res) => {
         }
       }
       
+      // Individual protocol routes
+      const protocolMatch = pathname.match(/^\/api\/protocols\/([^/]+)$/);
+      if (protocolMatch) {
+        const protocolId = protocolMatch[1];
+        const protocol = protocols.find(p => p.id === protocolId);
+        
+        if (req.method === 'GET') {
+          if (!protocol) {
+            res.status(404).json({ error: 'Protocol not found' });
+            return;
+          }
+          res.status(200).json(protocol);
+          return;
+        } else if (req.method === 'PUT') {
+          if (!protocol) {
+            res.status(404).json({ error: 'Protocol not found' });
+            return;
+          }
+          let body = '';
+          req.on('data', chunk => body += chunk.toString());
+          req.on('end', () => {
+            try {
+              const data = JSON.parse(body);
+              Object.assign(protocol, data, { updated_at: new Date().toISOString() });
+              res.status(200).json(protocol);
+            } catch (error) {
+              res.status(400).json({ error: 'Invalid JSON' });
+            }
+          });
+          return;
+        } else if (req.method === 'DELETE') {
+          const index = protocols.findIndex(p => p.id === protocolId);
+          if (index === -1) {
+            res.status(404).json({ error: 'Protocol not found' });
+            return;
+          }
+          protocols.splice(index, 1);
+          res.status(204).end();
+          return;
+        }
+      }
+      
+      // Missing API endpoints with query parameters
+      if (pathname === '/api/mushroom-species' && parsedUrl.query.active) {
+        res.status(200).json(mushroomSpecies.filter(s => s.active !== false));
+        return;
+      }
+      
+      if (pathname === '/api/inoculation-methods' && parsedUrl.query.active) {
+        res.status(200).json([
+          { id: '1', name: 'Sporensyringe', method_type: 'spore_syringe', difficulty_level: 'easy' },
+          { id: '2', name: 'Flüssigkultur', method_type: 'liquid_culture', difficulty_level: 'medium' }
+        ]);
+        return;
+      }
+      
+      if (pathname === '/api/substrate-recipes' && parsedUrl.query.active) {
+        res.status(200).json([
+          { id: '1', name: 'Standard Weizenstroh', description: 'Bewährtes Rezept für Austernpilze' },
+          { id: '2', name: 'Shiitake Mix', description: 'Optimiert für Shiitake' }
+        ]);
+        return;
+      }
+      
       // Dashboard API
       if (pathname === '/api/dashboard/stats') {
         res.status(200).json(getDashboardStats());
+        return;
+      }
+      
+      if (pathname === '/api/dashboard/activities') {
+        res.status(200).json([
+          {
+            title: 'Neues Zuchtprotokoll erstellt',
+            content: 'Black Pearl - Pleurotus ostreatus',
+            created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            batch_name: 'Batch #1'
+          },
+          {
+            title: 'Protokoll aktualisiert', 
+            content: 'Erste Pinsets bei Shiitake sichtbar',
+            created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+            batch_name: 'Shiitake #3'
+          }
+        ]);
         return;
       }
       

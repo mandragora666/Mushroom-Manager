@@ -2,7 +2,7 @@
  * Photo Upload Component
  * Handles file uploads to Supabase Storage
  */
-export class PhotoUploadComponent {
+class PhotoUploadComponent {
     constructor(options = {}) {
         this.options = {
             maxFiles: 5,
@@ -321,3 +321,6 @@ if (!document.querySelector('#photo-upload-styles')) {
     styleElement.innerHTML = uploadStyles;
     document.head.appendChild(styleElement);
 }
+
+// Make PhotoUploadComponent globally available
+window.PhotoUploadComponent = PhotoUploadComponent;

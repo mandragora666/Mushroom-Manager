@@ -1,5 +1,5 @@
 // Enhanced Protocols Section with flexible forms and photo upload
-import { PhotoUploadComponent } from '../components/photo-upload.js';
+// PhotoUploadComponent wird global geladen
 
 MushroomManager.prototype.loadProtocolsEnhanced = async function() {
     const content = document.getElementById('content');
