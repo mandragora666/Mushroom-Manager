@@ -1,13 +1,13 @@
 {
   "functions": {
-    "src/index.tsx": {
+    "src/index.js": {
       "runtime": "@vercel/node@18"
     }
   },
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/src/index.tsx"
+      "destination": "/src/index.js"
     }
   ]
 }

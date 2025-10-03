@@ -1,7 +1,7 @@
-import { Hono } from 'hono'
-import { cors } from 'hono/cors'
-import { serveStatic } from '@hono/node-server/serve-static'
-import { handle } from '@hono/node-server/vercel'
+const { Hono } = require('hono')
+const { cors } = require('hono/cors')
+const { serveStatic } = require('@hono/node-server/serve-static')
+const { handle } = require('@hono/node-server/vercel')
 
 const app = new Hono()
 
@@ -221,4 +221,4 @@ app.get('/', (c) => {
   `)
 })
 
-export default handle(app)
+module.exports = handle(app)

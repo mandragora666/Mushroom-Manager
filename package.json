@@ -1,6 +1,5 @@
 {
   "name": "mushroom-manager",
-  "type": "module",
   "scripts": {
     "dev": "@hono/node-server",
     "dev:sandbox": "wrangler pages dev dist --d1=mushroom-manager-db --local --ip 0.0.0.0 --port 3000",
