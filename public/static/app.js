@@ -145,11 +145,18 @@ class MushroomManager {
     // ===== DASHBOARD =====
     async getDashboardContent() {
         try {
-            // Fetch dashboard data from API
+            console.log('🔄 Loading dashboard data...');
+            
+            // Fetch dashboard data from API with timeout
             const [statsResponse, activitiesResponse] = await Promise.all([
-                axios.get('/api/dashboard/stats'),
-                axios.get('/api/dashboard/activities')
+                axios.get('/api/dashboard/stats', { timeout: 5000 }),
+                axios.get('/api/dashboard/activities', { timeout: 5000 })
             ]);
+
+            console.log('✅ Dashboard data loaded:', { 
+                stats: statsResponse.data, 
+                activities: activitiesResponse.data 
+            });
 
             const stats = statsResponse.data;
             const activities = activitiesResponse.data;
@@ -575,8 +582,27 @@ class MushroomManager {
 // Initialize app when DOM is loaded
 let app;
 document.addEventListener('DOMContentLoaded', () => {
-    app = new MushroomManager();
+    console.log('🍄 Starting Mushroom Manager...');
+    try {
+        app = new MushroomManager();
+        // Global app reference for onclick handlers
+        window.app = app;
+        console.log('✅ Mushroom Manager initialized successfully');
+    } catch (error) {
+        console.error('❌ Error initializing Mushroom Manager:', error);
+        // Show error in content area
+        const content = document.getElementById('content');
+        if (content) {
+            content.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-4"></i>
+                    <p class="text-red-600 font-medium">Fehler beim Laden der Anwendung</p>
+                    <p class="text-gray-600 text-sm mt-2">Bitte laden Sie die Seite neu</p>
+                    <button onclick="location.reload()" class="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                        Seite neu laden
+                    </button>
+                </div>
+            `;
+        }
+    }
 });
-
-// Global app reference for onclick handlers
-window.app = app;
