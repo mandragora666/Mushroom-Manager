@@ -616,12 +616,21 @@ function getEinstellungenContent() {
 // Load dashboard data from API
 async function loadDashboardData() {
     try {
-        console.log('📊 Loading dashboard data from API...');
+        console.log('📊 Loading dashboard data (using mock data for now)...');
         
-        const response = await fetch('/api/dashboard/stats');
-        if (response.ok) {
-            const stats = await response.json();
-            console.log('✅ Dashboard stats loaded:', stats);
+        // Use mock data instead of API call for now
+        const stats = {
+            activeProtocols: 2,
+            mushroomSpecies: 5,
+            inventoryItems: 12,
+            cultures: 8,
+            averageSuccessRate: 79,
+            temperature: 22,
+            humidity: 85,
+            co2: 650,
+            ventilation: 6
+        };
+        console.log('✅ Dashboard stats loaded:', stats);
             
             // Update Statistik-Karten
             const statsProtocols = document.getElementById('statsProtocols');
@@ -645,12 +654,11 @@ async function loadDashboardData() {
             if (dashCO2) dashCO2.textContent = stats.co2 || 650;
             if (dashVent) dashVent.textContent = (stats.ventilation || 6) + 'x';
             
-        } else {
-            console.warn('⚠️ Failed to load dashboard stats, using fallback data');
+            
+        } catch (error) {
+            console.log('📊 Using mock data (no API connection)');
+            // Fallback data is already set above, so we're good
         }
-    } catch (error) {
-        console.error('❌ Error loading dashboard data:', error);
-    }
 }
 
 // Setup navigation when DOM is loaded
