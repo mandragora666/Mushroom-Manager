@@ -1,12 +1,9 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { serveStatic } from 'hono/cloudflare-workers'
+import { serveStatic } from '@hono/node-server/serve-static'
+import { handle } from '@hono/node-server/vercel'
 
-type Bindings = {
-  DB: D1Database;
-}
-
-const app = new Hono<{ Bindings: Bindings }>()
+const app = new Hono()
 
 // CORS für API-Routen
 app.use('/api/*', cors())
@@ -18,101 +15,44 @@ app.use('/static/*', serveStatic({ root: './public' }))
 
 // Dashboard API - Statistiken
 app.get('/api/dashboard/stats', async (c) => {
-  try {
-    const { env } = c;
-    
-    // Count active cultivation logs
-    const activeProtocols = await env.DB.prepare(`
-      SELECT COUNT(*) as count FROM cultivation_logs 
-      WHERE status IN ('inoculation', 'colonization', 'fruiting')
-    `).first();
-
-    // Count mushroom species
-    const mushroomSpecies = await env.DB.prepare(`
-      SELECT COUNT(*) as count FROM mushroom_species
-    `).first();
-
-    // Count inventory items
-    const inventoryItems = await env.DB.prepare(`
-      SELECT COUNT(*) as count FROM inventory_items
-    `).first();
-
-    // Count cultures
-    const cultures = await env.DB.prepare(`
-      SELECT COUNT(*) as count FROM cultures
-    `).first();
-
-    // Calculate average success rate
-    const successRate = await env.DB.prepare(`
-      SELECT AVG(success_rate) as avg_rate FROM cultivation_protocols
-    `).first();
-
-    return c.json({
-      activeProtocols: activeProtocols?.count || 2,
-      mushroomSpecies: mushroomSpecies?.count || 5,
-      inventoryItems: inventoryItems?.count || 12,
-      cultures: cultures?.count || 8,
-      averageSuccessRate: Math.round(successRate?.avg_rate || 79),
-      // Umwelt-Bedingungen (simuliert oder von Sensoren)
-      temperature: 22,
-      humidity: 85,
-      co2: 650,
-      ventilation: 6
-    });
-  } catch (error) {
-    console.error('Dashboard stats error:', error);
-    return c.json({ 
-      activeProtocols: 2, 
-      mushroomSpecies: 5, 
-      inventoryItems: 12,
-      cultures: 8,
-      averageSuccessRate: 79,
-      temperature: 22,
-      humidity: 85,
-      co2: 650,
-      ventilation: 6
-    });
-  }
+  // Mock-Daten für Vercel Deployment
+  return c.json({
+    activeProtocols: 2,
+    mushroomSpecies: 5,
+    inventoryItems: 12,
+    cultures: 8,
+    averageSuccessRate: 79,
+    // Umwelt-Bedingungen (simuliert oder von Sensoren)
+    temperature: 22,
+    humidity: 85,
+    co2: 650,
+    ventilation: 6
+  });
 });
 
 // Recent activities
 app.get('/api/dashboard/activities', async (c) => {
-  try {
-    const { env } = c;
-    
-    const activities = await env.DB.prepare(`
-      SELECT 
-        le.title,
-        le.content,
-        le.created_at,
-        cl.batch_name,
-        ms.name as species_name
-      FROM log_entries le
-      JOIN cultivation_logs cl ON le.cultivation_log_id = cl.id
-      JOIN cultivation_protocols cp ON cl.protocol_id = cp.id
-      JOIN mushroom_species ms ON cp.mushroom_species_id = ms.id
-      ORDER BY le.created_at DESC
-      LIMIT 10
-    `).all();
-
-    return c.json(activities.results || []);
-  } catch (error) {
-    console.error('Activities error:', error);
-    return c.json([
-      {
-        title: 'Neues Zuchtprotokoll erstellt',
-        content: 'Black Pearl - Pleurotus ostreatus',
-        created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        batch_name: 'Batch #1'
-      },
-      {
-        title: 'Protokoll aktualisiert', 
-        content: 'Erste Pinsets bei Shiitake sichtbar',
-        created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        batch_name: 'Shiitake #3'
-      }
-    ]);
-  }
+  // Mock-Daten für Vercel Deployment
+  return c.json([
+    {
+      title: 'Neues Zuchtprotokoll erstellt',
+      content: 'Black Pearl - Pleurotus ostreatus',
+      created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      batch_name: 'Batch #1'
+    },
+    {
+      title: 'Protokoll aktualisiert', 
+      content: 'Erste Pinsets bei Shiitake sichtbar',
+      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      batch_name: 'Shiitake #3'
+    },
+    {
+      title: 'Ernteprotokoll',
+      content: 'Erste Ernte von King Oyster erfolgreich',
+      created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      batch_name: 'King Oyster #2'
+    }
+  ]);
 });
 
 // ===== MAIN ROUTE =====
@@ -281,4 +221,4 @@ app.get('/', (c) => {
   `)
 })
 
-export default app
+export default handle(app)
