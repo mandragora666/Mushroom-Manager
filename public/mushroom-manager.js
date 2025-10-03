@@ -332,6 +332,12 @@ class MushroomManager {
                         this.showSuccess('Protokoll erstellt!');
                     }
                     
+                    // Close modal after successful save
+                    if (typeof hideNewProtocolForm === 'function') {
+                        hideNewProtocolForm();
+                    }
+                    
+                    // Refresh protocol list
                     if (typeof this.loadProtocolsEnhanced === 'function') {
                         await this.loadProtocolsEnhanced();
                     } else {
