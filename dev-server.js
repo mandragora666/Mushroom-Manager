@@ -3,6 +3,9 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+// Load environment variables from .env.local
+require('dotenv').config({ path: '.env.local' });
+
 const PORT = 3001;
 
 // Load API functions from files
