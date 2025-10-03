@@ -6,7 +6,7 @@ const path = require('path');
 // Load environment variables from .env.local
 require('dotenv').config({ path: '.env.local' });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3000;
 
 // Load API functions from files
 const loadApiFunction = (filePath) => {

@@ -155,11 +155,17 @@
     </div>
     
     <!-- Main Application Scripts -->
+    <script src="/lib/supabase-browser.js"></script>
     <script src="/mushroom-manager.js"></script>
     <script src="/sections/dashboard.js"></script>
     <script src="/sections/protocols.js"></script>
     <script src="/sections/wiki.js"></script>
     <script src="/sections/placeholder.js"></script>
+    
+    <!-- Enhanced Scripts (loaded after base scripts) -->
+    <script src="/components/photo-upload.js" type="module"></script>
+    <script src="/sections/protocols-enhanced.js" type="module"></script>
+    <script src="/sections/protocols-template-based.js" type="module"></script>
     
 </body>
 </html>

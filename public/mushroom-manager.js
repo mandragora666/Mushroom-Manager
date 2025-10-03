@@ -63,6 +63,74 @@ class MushroomManager {
         });
     }
 
+    // NEW ENHANCED API METHODS
+    
+    // Mushroom Species API
+    async getMushroomSpecies() {
+        return this.apiCall('/api/mushroom-species');
+    }
+
+    async createMushroomSpecies(data) {
+        return this.apiCall('/api/mushroom-species', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
+    async updateMushroomSpecies(id, data) {
+        return this.apiCall(`/api/mushroom-species?id=${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    }
+
+    // Substrate Recipes API
+    async getSubstrateRecipes() {
+        return this.apiCall('/api/substrate-recipes');
+    }
+
+    async getSubstrateRecipe(id) {
+        return this.apiCall(`/api/substrate-recipes?id=${id}`);
+    }
+
+    async createSubstrateRecipe(data) {
+        return this.apiCall('/api/substrate-recipes', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
+    async updateSubstrateRecipe(id, data) {
+        return this.apiCall(`/api/substrate-recipes?id=${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    }
+
+    // Inoculation Methods API
+    async getInoculationMethods() {
+        return this.apiCall('/api/inoculation-methods');
+    }
+
+    async createInoculationMethod(data) {
+        return this.apiCall('/api/inoculation-methods', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
+    async updateInoculationMethod(id, data) {
+        return this.apiCall(`/api/inoculation-methods?id=${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    }
+
+    // Growth Phases API
+    async getGrowthPhases() {
+        return this.apiCall('/api/growth-phases');
+    }
+
     // WIKI API
     async getWikiArticles(category = null) {
         const url = category ? `/api/wiki?category=${encodeURIComponent(category)}` : '/api/wiki';
@@ -146,16 +214,54 @@ class MushroomManager {
         try {
             switch (action) {
                 case 'create-protocol':
-                    await this.showProtocolForm();
+                    // Use enhanced form if available
+                    if (typeof this.showProtocolFormEnhanced === 'function') {
+                        await this.showProtocolFormEnhanced();
+                    } else {
+                        await this.showProtocolForm();
+                    }
                     break;
                 case 'edit-protocol':
-                    await this.showProtocolForm(id);
+                    if (typeof this.showProtocolFormEnhanced === 'function') {
+                        await this.showProtocolFormEnhanced(id);
+                    } else {
+                        await this.showProtocolForm(id);
+                    }
+                    break;
+                case 'view-protocol':
+                    await this.showProtocolDetails(id);
                     break;
                 case 'delete-protocol':
                     if (confirm('Protokoll wirklich löschen?')) {
                         await this.deleteProtocol(id);
-                        await this.loadSection('zuchtprotokoll');
+                        if (typeof this.loadProtocolsEnhanced === 'function') {
+                            await this.loadProtocolsEnhanced();
+                        } else {
+                            await this.loadSection('zuchtprotokoll');
+                        }
                         this.showSuccess('Protokoll gelöscht!');
+                    }
+                    break;
+                case 'manage-species':
+                    await this.showMushroomSpeciesManager();
+                    break;
+                case 'manage-substrates':
+                    await this.showSubstrateRecipeManager();
+                    break;
+                case 'add-mushroom-species':
+                    await this.showMushroomSpeciesForm();
+                    break;
+                case 'add-substrate-recipe':
+                    await this.showSubstrateRecipeForm();
+                    break;
+                case 'add-inoculation-method':
+                    await this.showInoculationMethodForm();
+                    break;
+                case 'create-protocol-template':
+                    if (typeof this.showProtocolFormTemplateBased === 'function') {
+                        await this.showProtocolFormTemplateBased();
+                    } else {
+                        await this.showProtocolForm();
                     }
                     break;
                 case 'create-wiki-article':
@@ -200,6 +306,37 @@ class MushroomManager {
                         this.showSuccess('Protokoll erstellt!');
                     }
                     await this.loadSection('zuchtprotokoll');
+                    break;
+                    
+                case 'protocol-enhanced':
+                    const enhancedProtocolId = form.dataset.protocolId;
+                    
+                    // Handle photo uploads
+                    if (window.currentPhotoUploader) {
+                        data.images = window.currentPhotoUploader.getUploadedUrls();
+                    }
+                    
+                    // Handle temperature and humidity ranges
+                    if (data.temperature_min && data.temperature_max) {
+                        data.temperature_range = `${data.temperature_min}-${data.temperature_max}°C`;
+                    }
+                    if (data.humidity_min && data.humidity_max) {
+                        data.humidity_range = `${data.humidity_min}-${data.humidity_max}%`;
+                    }
+                    
+                    if (enhancedProtocolId) {
+                        await this.updateProtocol(enhancedProtocolId, data);
+                        this.showSuccess('Protokoll aktualisiert!');
+                    } else {
+                        await this.createProtocol(data);
+                        this.showSuccess('Protokoll erstellt!');
+                    }
+                    
+                    if (typeof this.loadProtocolsEnhanced === 'function') {
+                        await this.loadProtocolsEnhanced();
+                    } else {
+                        await this.loadSection('zuchtprotokoll');
+                    }
                     break;
                 
                 case 'wiki':
@@ -274,7 +411,11 @@ class MushroomManager {
                     await this.loadDashboard();
                     break;
                 case 'zuchtprotokoll':
-                    await this.loadProtocols();
+                    if (typeof this.loadProtocolsEnhanced === 'function') {
+                        await this.loadProtocolsEnhanced();
+                    } else {
+                        await this.loadProtocols();
+                    }
                     break;
                 case 'wiki':
                     await this.loadWiki();

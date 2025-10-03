@@ -1,10 +1,19 @@
-# 🍄 Mushroom Manager
+# 🍄 Mushroom Manager Enhanced
 
-Eine moderne, responsive Web-Anwendung für die professionelle Pilzzucht-Verwaltung. Entwickelt mit Hono Framework und Cloudflare Pages.
+Eine moderne, responsive Web-Anwendung für die professionelle Pilzzucht-Verwaltung. Erweitert mit flexiblen Protokoll-Formularen, Foto-Upload und dynamischen Substratrezepten. Entwickelt mit Hono Framework und Cloudflare Pages.
 
 ## 🌟 Aktuelle Features
 
-### ✅ Implementiert
+### ✅ Neu implementiert (Enhanced Version)
+- **🎯 Flexible Protokoll-Formulare** - Anpassbare Pilzarten, Substratrezepte und Inokulationsmethoden
+- **📸 Foto-Upload Funktionalität** - Dokumentationsfotos für Wachstumsstadien hochladen
+- **🧪 Substratrezept-Verwaltung** - Rezepte mit mehreren Zutaten und Verhältnissen erstellen
+- **🔧 Anpassbare Inokulationsmethoden** - Eigene Methoden definieren und dokumentieren
+- **📈 Erweiterte Wachstumsphasen** - Detaillierte Phasen-Verwaltung mit Bedingungen
+- **🏷️ Dynamische Pilzarten** - Neue Pilzarten hinzufügen statt nur vordefinierte auswählen
+- **🎨 Enhanced UI/UX** - Verbesserte Benutzeroberfläche mit Management-Buttons
+
+### ✅ Basis-Features
 - **📊 Dashboard** - Übersicht über aktive Protokolle und Statistiken
 - **📋 Zuchtprotokoll-Verwaltung** - Dokumentation und Verfolgung von Zuchtprojekten  
 - **📚 Wiki & Pilzsorten** - Umfangreiche Datenbank mit Pilzsorten und Substratrezepten
@@ -19,18 +28,25 @@ Eine moderne, responsive Web-Anwendung für die professionelle Pilzzucht-Verwalt
 
 ## 🌐 URLs
 
-- **Lokale Entwicklung**: https://3000-ixjyj9f115o7wcvrp8hwj-6532622b.e2b.dev
+- **Enhanced Version (Sandbox)**: https://3000-ixjyj9f115o7wcvrp8hwj-6532622b.e2b.dev
+- **GitHub Repository**: *GitHub Setup benötigt*
 - **Production**: *Wird nach Cloudflare Deployment verfügbar*
 
-## 🗄️ Datenarchitektur
+## 🗄️ Datenarchitektur (Enhanced Schema)
 
-### Datenmodelle
-- **Pilzarten** (mushroom_species) - Austernpilz, Shiitake, Champignon, etc.
-- **Substrate** (substrates) - Strohpellets, Kaffeesatz, Hartholzspäne, etc.
-- **Zuchtprotokolle** (cultivation_protocols) - Schritt-für-Schritt Zuchtanleitungen
-- **Zucht-Logs** (cultivation_logs) - Benutzer-Aufzeichnungen laufender Projekte
+### Basis-Datenmodelle
+- **Protokolle** (protocols) - Hauptprotokoll-Datensätze mit Foreign Keys
+- **Protokoll-Einträge** (protocol_entries) - Timeline-Einträge zu Protokollen
 - **Wiki-Artikel** (wiki_articles) - Wissensdatenbank und Anleitungen
-- **Log-Einträge** (log_entries) - Detaillierte Protokoll-Einträge
+- **Wiki-Kategorien** (wiki_categories) - Kategorisierung für Wiki-Artikel
+- **Inventar** (inventory) - Materialien und Lagerbestand
+
+### Enhanced Datenmodelle (Neue Features)
+- **Pilzarten** (mushroom_species) - Flexible Pilzarten mit Eigenschaften
+- **Substratrezepte** (substrate_recipes) - Rezepte mit Gesamtgewicht und Sterilisation
+- **Substrat-Zutaten** (substrate_ingredients) - Zutaten mit Mengen und Verhältnissen
+- **Inokulationsmethoden** (inoculation_methods) - Anpassbare Methoden mit Schritten
+- **Wachstumsphasen** (growth_phases) - Detaillierte Phasen mit Bedingungen
 
 ### Storage Services
 - **Cloudflare D1** - Hauptdatenbank (SQLite, global verteilt)
@@ -38,16 +54,21 @@ Eine moderne, responsive Web-Anwendung für die professionelle Pilzzucht-Verwalt
 
 ## 🚀 API Endpunkte
 
-### Dashboard
-- `GET /api/dashboard/stats` - Statistiken (aktive Protokolle, Pilzarten, Erfolgsrate)
-- `GET /api/dashboard/activities` - Letzte Aktivitäten
+### Basis APIs
+- `GET/POST/PUT/DELETE /api/protocols` - Zuchtprotokoll CRUD-Operationen
+- `GET/POST/PUT/DELETE /api/wiki` - Wiki-Artikel Management
+- `POST /api/upload` - Foto-Upload zu Supabase Storage
 
-### Zuchtprotokolle  
-- `GET /api/protocols` - Alle Zuchtprotokolle mit Substrat- und Artinformationen
+### Enhanced APIs (Neue Features)
+- `GET/POST/PUT/DELETE /api/mushroom-species` - Pilzarten-Verwaltung
+- `GET/POST/PUT/DELETE /api/substrate-recipes` - Substratrezept-Management
+- `GET/POST/PUT/DELETE /api/inoculation-methods` - Inokulationsmethoden-CRUD
+- `GET/POST/PUT/DELETE /api/growth-phases` - Wachstumsphasen-Verwaltung
 
-### Wiki & Wissen
-- `GET /api/wiki/articles?category=all` - Wiki-Artikel (filtert nach Kategorie)
-- `GET /api/species` - Alle Pilzarten mit Schwierigkeitsgraden
+### File Upload
+- `POST /api/upload` - Foto-Upload mit Supabase Storage Integration
+- Unterstützt: JPEG, PNG, WebP (max. 5MB pro Datei)
+- Automatische Pfad-Generierung: `uploads/YYYY/MM/timestamp-random.ext`
 
 ## 👥 Benutzerhandbuch
 
@@ -56,10 +77,13 @@ Eine moderne, responsive Web-Anwendung für die professionelle Pilzzucht-Verwalt
 2. **Schnellaktionen** - Direkt neue Protokolle oder Wiki-Einträge erstellen
 3. **Aktivitäten verfolgen** - Letzte Änderungen und Updates im Überblick
 
-### Zuchtprotokolle verwalten
-1. **Neues Protokoll** - "Neues Zuchtprotokoll erstellen" Button verwenden
-2. **Übersicht** - Alle Protokolle mit Schwierigkeitsgrad und erwarteter Ernte
-3. **Protokoll starten** - Aus vorhandenen Protokollen neue Zuchtprojekte starten
+### Enhanced Zuchtprotokolle verwalten
+1. **Flexible Pilzarten** - Eigene Pilzarten hinzufügen oder aus Liste auswählen
+2. **Substratrezepte** - Detaillierte Rezepte mit mehreren Zutaten erstellen
+3. **Foto-Dokumentation** - Bis zu 10 Fotos pro Protokoll für Wachstumsstadien
+4. **Anpassbare Methoden** - Eigene Inokulationsmethoden und Wachstumsphasen
+5. **Erweiterte Bedingungen** - Getrennte Min/Max-Werte für Temperatur und Feuchtigkeit
+6. **Management-Tools** - Separate Verwaltungsseiten für Pilzarten und Substrate
 
 ### Wiki nutzen
 1. **Artikel durchsuchen** - Nach Kategorien filtern (Kultivierung, Substrate, etc.)
@@ -121,12 +145,14 @@ npm run build
 4. **Benutzer-Authentifizierung** - Multi-User-Support mit Cloudflare Access
 5. **Backup-System** - Automatische Datensicherung und Export-Funktionen
 
-## 📊 Aktuelle Statistiken
+## 📊 Enhanced Statistiken
 
-- **Pilzarten**: 5 (Austernpilz, Shiitake, Champignon, Kräuterseitling, Reishi)
-- **Substrate**: 5 (Strohpellets, Kaffeesatz, Hartholzspäne, etc.)
-- **Zuchtprotokolle**: 4 (verschiedene Schwierigkeitsgrade)
-- **Wiki-Artikel**: 3 (Sterilisation, pH-Wert, Kontamination)
+### Vordefinierte Daten (seed-enhanced.sql)
+- **Pilzarten**: 8 (Austernpilz, Shiitake, Champignon, Kräuterseitling, Limonen-Austernpilz, Igelstachelbart, Enoki, Maitake)
+- **Substratrezepte**: 7 (Standard Weizenstroh, Kaffeesatz-Mix, Laubholzspäne, Universalsubstrat, etc.)
+- **Inokulationsmethoden**: 6 (Sporensyringe, Flüssigkultur, Agar-Transfer, Kornbrut, Impfdübel, Fertigkultur)
+- **Wachstumsphasen**: 6 (Inokulation → Durchwachsung → Primordien → Fruchtentwicklung → Ernte → Zweite Welle)
+- **Erweiterte Features**: Foto-Upload, flexible Formulare, dynamische Rezeptverwaltung
 
 ## 🔒 Sicherheit & Datenschutz
 
