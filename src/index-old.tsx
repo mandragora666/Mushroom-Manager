@@ -32,45 +32,22 @@ app.get('/api/dashboard/stats', async (c) => {
       SELECT COUNT(*) as count FROM mushroom_species
     `).first();
 
-    // Count inventory items
-    const inventoryItems = await env.DB.prepare(`
-      SELECT COUNT(*) as count FROM inventory_items
-    `).first();
-
-    // Count cultures
-    const cultures = await env.DB.prepare(`
-      SELECT COUNT(*) as count FROM cultures
-    `).first();
-
     // Calculate average success rate
     const successRate = await env.DB.prepare(`
       SELECT AVG(success_rate) as avg_rate FROM cultivation_protocols
     `).first();
 
     return c.json({
-      activeProtocols: activeProtocols?.count || 2,
-      mushroomSpecies: mushroomSpecies?.count || 5,
-      inventoryItems: inventoryItems?.count || 12,
-      cultures: cultures?.count || 8,
-      averageSuccessRate: Math.round(successRate?.avg_rate || 79),
-      // Umwelt-Bedingungen (simuliert oder von Sensoren)
-      temperature: 22,
-      humidity: 85,
-      co2: 650,
-      ventilation: 6
+      activeProtocols: activeProtocols?.count || 0,
+      mushroomSpecies: mushroomSpecies?.count || 0,
+      averageSuccessRate: Math.round(successRate?.avg_rate || 0)
     });
   } catch (error) {
     console.error('Dashboard stats error:', error);
     return c.json({ 
-      activeProtocols: 2, 
-      mushroomSpecies: 5, 
-      inventoryItems: 12,
-      cultures: 8,
-      averageSuccessRate: 79,
-      temperature: 22,
-      humidity: 85,
-      co2: 650,
-      ventilation: 6
+      activeProtocols: 12, 
+      mushroomSpecies: 28, 
+      averageSuccessRate: 85 
     });
   }
 });
@@ -115,6 +92,78 @@ app.get('/api/dashboard/activities', async (c) => {
   }
 });
 
+// Cultivation Protocols API
+app.get('/api/protocols', async (c) => {
+  try {
+    const { env } = c;
+    
+    const protocols = await env.DB.prepare(`
+      SELECT 
+        cp.*,
+        ms.name as species_name,
+        ms.scientific_name,
+        s.name as substrate_name
+      FROM cultivation_protocols cp
+      LEFT JOIN mushroom_species ms ON cp.mushroom_species_id = ms.id
+      LEFT JOIN substrates s ON cp.substrate_id = s.id
+      ORDER BY cp.created_at DESC
+    `).all();
+
+    return c.json(protocols.results || []);
+  } catch (error) {
+    console.error('Protocols error:', error);
+    return c.json([]);
+  }
+});
+
+// Wiki Articles API
+app.get('/api/wiki/articles', async (c) => {
+  const category = c.req.query('category');
+  
+  try {
+    const { env } = c;
+    
+    let query = `
+      SELECT * FROM wiki_articles 
+      WHERE published = true
+    `;
+    
+    if (category && category !== 'all') {
+      query += ` AND category = ?`;
+    }
+    
+    query += ` ORDER BY featured DESC, view_count DESC, created_at DESC`;
+    
+    const stmt = category && category !== 'all' 
+      ? env.DB.prepare(query).bind(category)
+      : env.DB.prepare(query);
+      
+    const articles = await stmt.all();
+
+    return c.json(articles.results || []);
+  } catch (error) {
+    console.error('Wiki articles error:', error);
+    return c.json([]);
+  }
+});
+
+// Mushroom Species API
+app.get('/api/species', async (c) => {
+  try {
+    const { env } = c;
+    
+    const species = await env.DB.prepare(`
+      SELECT * FROM mushroom_species 
+      ORDER BY difficulty_level, name
+    `).all();
+
+    return c.json(species.results || []);
+  } catch (error) {
+    console.error('Species error:', error);
+    return c.json([]);
+  }
+});
+
 // ===== MAIN ROUTE =====
 app.get('/', (c) => {
   return c.html(`
@@ -128,14 +177,21 @@ app.get('/', (c) => {
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        /* Mobile-first Design */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        /* Angepasste Stile für Light Theme */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
         
-        .mobile-nav-item.active i,
-        .mobile-nav-item.active span {
-            color: #3b82f6 !important;
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
         }
         
         .nav-item.active {
@@ -143,22 +199,31 @@ app.get('/', (c) => {
             color: white;
         }
         
-        /* Custom scrollbar for webkit browsers */
-        ::-webkit-scrollbar {
-            width: 4px;
+        .mobile-nav-item.active {
+            color: #10b981;
         }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+        
+        .mobile-nav-item.active i {
+            color: #10b981;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 2px;
+        
+        /* Mobile-first responsive utilities */
+        @media (max-width: 768px) {
+            .main-content {
+                padding-bottom: 80px; /* Space for bottom nav */
+            }
+        }
+        
+        /* Blur overlay for mobile filters */
+        .mobile-overlay {
+            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 min-h-screen">
     
-    <!-- Desktop Sidebar (hidden on mobile) -->
+    <!-- Desktop Sidebar -->
     <div class="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:w-64 lg:bg-white/90 lg:backdrop-blur-xl lg:border-r lg:border-gray-200">
         <div class="flex flex-col flex-grow pt-5 overflow-y-auto">
             <!-- Logo -->
@@ -180,11 +245,11 @@ app.get('/', (c) => {
                 </div>
                 <div class="nav-item flex items-center px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-100 transition-colors" data-section="zuchtprotokoll">
                     <i class="fas fa-clipboard-list mr-3 text-lg"></i>
-                    Protokolle
+                    Zuchtprotokoll
                 </div>
                 <div class="nav-item flex items-center px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-100 transition-colors" data-section="wiki">
                     <i class="fas fa-book-open mr-3 text-lg"></i>
-                    Wiki
+                    Wiki & Substrate
                 </div>
                 <div class="nav-item flex items-center px-4 py-3 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-100 transition-colors" data-section="inventar">
                     <i class="fas fa-boxes mr-3 text-lg"></i>
@@ -210,25 +275,27 @@ app.get('/', (c) => {
         </div>
     </div>
     
-    <!-- Mobile-First Layout -->
-    <div class="lg:pl-64 min-h-screen flex flex-col">
-        
-        <!-- Mobile Header (visible on mobile only) -->
-        <div class="lg:hidden bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-10">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <div class="bg-green-100 p-2 rounded-lg mr-3">
-                        <i class="fas fa-seedling text-green-600"></i>
-                    </div>
-                    <div>
-                        <h1 id="pageTitleMobile" class="text-lg font-semibold text-gray-900">Dashboard</h1>
-                        <p id="pageDescriptionMobile" class="text-xs text-gray-600">Übersicht Ihrer Pilzzucht-Aktivitäten</p>
-                    </div>
+    <!-- Mobile Header -->
+    <div class="lg:hidden bg-white/90 backdrop-blur-xl border-b border-gray-200 px-4 py-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="bg-green-100 p-2 rounded-lg mr-3">
+                    <i class="fas fa-seedling text-green-600"></i>
+                </div>
+                <div>
+                    <h1 id="pageTitleMobile" class="text-lg font-semibold text-gray-900">Dashboard</h1>
+                    <p id="pageDescriptionMobile" class="text-xs text-gray-600">Übersicht Ihrer Pilzzucht-Aktivitäten</p>
                 </div>
             </div>
+            <button class="p-2 rounded-lg hover:bg-gray-100">
+                <i class="fas fa-ellipsis-v text-gray-600"></i>
+            </button>
         </div>
-        
-        <!-- Desktop Header (hidden on mobile) -->
+    </div>
+    
+    <!-- Main Content Area -->
+    <div class="lg:pl-64">
+        <!-- Desktop Header -->
         <div class="hidden lg:block bg-white/80 backdrop-blur-xl border-b border-gray-200 px-6 py-4">
             <div>
                 <h1 id="pageTitle" class="text-2xl font-bold text-gray-900">Dashboard</h1>
@@ -236,12 +303,12 @@ app.get('/', (c) => {
             </div>
         </div>
         
-        <!-- Main Content Area -->
-        <main class="flex-1 p-4 pb-20 lg:pb-6">
+        <!-- Page Content -->
+        <main class="main-content p-4 lg:p-6">
             <div id="content">
                 <!-- Content wird hier dynamisch geladen -->
                 <div class="text-center py-8">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
                     <p class="mt-4 text-gray-600">Lade Dashboard...</p>
                 </div>
             </div>
@@ -249,32 +316,29 @@ app.get('/', (c) => {
     </div>
     
     <!-- Mobile Bottom Navigation -->
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
-        <div class="grid grid-cols-5 py-2">
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-200">
+        <div class="grid grid-cols-4 py-2">
             <button class="mobile-nav-item active flex flex-col items-center py-2 px-1" data-section="dashboard">
-                <i class="fas fa-chart-pie text-lg mb-1 text-blue-600"></i>
-                <span class="text-xs font-medium text-blue-600">Dashboard</span>
+                <i class="fas fa-chart-pie text-lg mb-1"></i>
+                <span class="text-xs font-medium">Dashboard</span>
             </button>
-            <button class="mobile-nav-item flex flex-col items-center py-2 px-1 text-gray-400" data-section="zuchtprotokoll">
+            <button class="mobile-nav-item flex flex-col items-center py-2 px-1 text-gray-600" data-section="zuchtprotokoll">
                 <i class="fas fa-clipboard-list text-lg mb-1"></i>
-                <span class="text-xs font-medium">Protokoll</span>
+                <span class="text-xs font-medium">Protokolle</span>
             </button>
-            <button class="mobile-nav-item flex flex-col items-center py-2 px-1 text-gray-400" data-section="wiki">
+            <button class="mobile-nav-item flex flex-col items-center py-2 px-1 text-gray-600" data-section="wiki">
                 <i class="fas fa-book-open text-lg mb-1"></i>
                 <span class="text-xs font-medium">Wiki</span>
             </button>
-            <button class="mobile-nav-item flex flex-col items-center py-2 px-1 text-gray-400" data-section="inventar">
-                <i class="fas fa-boxes text-lg mb-1"></i>
-                <span class="text-xs font-medium">Inventar</span>
-            </button>
-            <button class="mobile-nav-item flex flex-col items-center py-2 px-1 text-gray-400" data-section="einstellungen">
+            <button class="mobile-nav-item flex flex-col items-center py-2 px-1 text-gray-600" data-section="einstellungen">
                 <i class="fas fa-cog text-lg mb-1"></i>
                 <span class="text-xs font-medium">Mehr</span>
             </button>
         </div>
     </div>
     
-    <script src="/static/app-mockup.js?v=${Date.now()}"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script> -->
+    <script src="/static/app-working.js?v=${Date.now()}"></script>
     
 </body>
 </html>
