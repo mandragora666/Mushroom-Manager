@@ -283,6 +283,58 @@ module.exports = async (req, res) => {
         return;
       }
       
+      // Growth Phases API
+      if (pathname === '/api/growth-phases') {
+        res.status(200).json([
+          {
+            id: '1',
+            name: 'Inokulation',
+            phase_order: 1,
+            description: 'Einbringung des Pilzmyzels ins Substrat',
+            duration_days: 1,
+            temperature_range: '20-25°C',
+            humidity_range: '60-70%'
+          },
+          {
+            id: '2', 
+            name: 'Kolonisierung',
+            phase_order: 2,
+            description: 'Myzel durchdringt das Substrat',
+            duration_days: 14,
+            temperature_range: '22-26°C',
+            humidity_range: '90-95%'
+          },
+          {
+            id: '3',
+            name: 'Primordien-Bildung', 
+            phase_order: 3,
+            description: 'Erste Pilzansätze werden sichtbar',
+            duration_days: 3,
+            temperature_range: '16-20°C',
+            humidity_range: '95-98%'
+          },
+          {
+            id: '4',
+            name: 'Fruiting',
+            phase_order: 4, 
+            description: 'Pilze wachsen zur vollen Größe',
+            duration_days: 7,
+            temperature_range: '15-20°C',
+            humidity_range: '85-90%'
+          },
+          {
+            id: '5',
+            name: 'Ernte',
+            phase_order: 5,
+            description: 'Reife Pilze werden geerntet', 
+            duration_days: 1,
+            temperature_range: '15-20°C',
+            humidity_range: '80-85%'
+          }
+        ]);
+        return;
+      }
+      
       // Dashboard API
       if (pathname === '/api/dashboard/stats') {
         res.status(200).json(getDashboardStats());
